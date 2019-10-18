@@ -47,7 +47,7 @@ public class Locations {
     public Locations() {
         try {        
             DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
-            con = DriverManager.getConnection("jdbc:oracle:thin:@//144.217.163.57:1521", "hr", "inf5180");
+            con = DriverManager.getConnection("jdbc:oracle:thin:@144.217.163.57:1521:XE", "hr", "inf5180");
         } catch (SQLException ex) {
             System.out.println("In catch of constructor");
             Logger.getLogger(Locations.class.getName()).log(Level.SEVERE, null, ex);
@@ -55,7 +55,7 @@ public class Locations {
     }
     
     @GET()
-    @Path("/insert&{locationId}&{streetAddr}&{postalCode}&{city}&{state}&{countryId}")
+    @Path("insert&{locationId}&{streetAddr}&{postalCode}&{city}&{state}&{countryId}")
     @Produces(MediaType.APPLICATION_JSON)
     public String insertLocation(@PathParam("locationId") int theLocatonId,
                                  @PathParam("streetAddr") String theStreetAddr,
@@ -118,7 +118,7 @@ public class Locations {
      * @return an instance of java.lang.String
      */
     @GET()
-    @Path("/list")
+    @Path("list")
     @Produces(MediaType.APPLICATION_JSON)
     public String getList() {
         ResultSet rs = null;
