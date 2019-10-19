@@ -26,56 +26,113 @@ import net.sf.json.JSONObject;
 /**
  * REST Web Service
  *
- * @author Nishchay
+ * @author Jay Shah
  */
-@Path("locations")
-public class Locations {
+@Path("/regions")
+public class Region {
 
     @Context
     private UriInfo context;
+    
     Connection con = null;
     PreparedStatement stm = null;
     ResultSet rs = null;
     private JSONObject mainObj;
-    private JSONArray locationArr;
-    int locationId;
-    String streetAdd, postalCode, city, state, countryId;
-    Locations loc;
-    /**
-     * Creates a new instance of Locations
-     */
-    public Locations() {
-        try {        
+    private JSONArray regionArr;
+    int regionId;
+    String regionName;
+    Region reg;
+    
+    
+    public Region() {
+        try {
             DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
             con = DriverManager.getConnection("jdbc:oracle:thin:@144.217.163.57:1521:XE", "hr", "inf5180");
+            System.out.println("In try block of constructor");
         } catch (SQLException ex) {
             System.out.println("In catch of constructor");
-            Logger.getLogger(Locations.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Region.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+    }
+
+    @GET
+    @Path("regList")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getList() {
+         ResultSet rs = null;
+            JSONObject listRegObj = new JSONObject();
+            reg = new Region();
+           System.out.println("Inside regions");
+        
+        try {
+            String sql;
+            regionArr = new JSONArray();
+            sql = "select * from regions";
+            System.out.println("ok");
+            stm = con.prepareStatement(sql);
+            rs = stm.executeQuery();
+            while(rs.next())
+            {
+                mainObj = new JSONObject();
+                regionId = rs.getInt(1);
+                regionName = rs.getString(2);
+                mainObj.accumulate("regionId", regionId);
+                mainObj.accumulate("regionName", regionName);
+                regionArr.add(mainObj);
+                
+            }
+            listRegObj.accumulate("Status","ok");
+            listRegObj.accumulate("TimeStamp",timeStamp());
+            listRegObj.accumulate("regions", regionArr);
+            
+          
+        } catch (SQLException ex) {
+             listRegObj.accumulate("Status","ok");
+            listRegObj.accumulate("TimeStamp",timeStamp());
+            listRegObj.accumulate("message", "Error");
+            Logger.getLogger(Region.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        finally{
+                        if (rs != null) {
+                            try {
+                                  rs.close();
+                                } catch (SQLException e) {
+                            /* ignored */
+                                }
+                            }
+                        if (stm != null) {
+                            try {
+                                    stm.close();
+                                } catch (SQLException e) {
+                            /* ignored */
+                                }
+                            }
+                        if (con != null) {
+                            try {
+                                    con.close();
+                                } catch (SQLException e) {
+                            /* ignored */
+                                }
+                            }
+                }
+        return listRegObj.toString();
     }
     
     // insert
     @GET()
-    @Path("insert&{locationId}&{streetAddr}&{postalCode}&{city}&{state}&{countryId}")
+    @Path("insertReg&{regionId}&{regionName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String insertLocation(@PathParam("locationId") int theLocatonId,
-                                 @PathParam("streetAddr") String theStreetAddr,
-                                 @PathParam("postalCode") String thePostalCode,
-                                 @PathParam("city") String theCity,
-                                 @PathParam("state") String theState,
-                                 @PathParam("countryId") String theCountryId) {
-        loc = new Locations();
+    public String insertLocation(@PathParam("regionId") int theRegionId,
+                                 @PathParam("regionName") String theRegionName) {
+        reg = new Region();
                 try {
                     String sql;
                     
-                    sql = "insert into locations values(?, ?, ?, ?, ?, ?)";
+                    sql = "insert into regions values(?, ?)";
                     stm = con.prepareStatement(sql);
-                    stm.setInt(1, theLocatonId);
-                    stm.setString(2, theStreetAddr);
-                    stm.setString(3, thePostalCode);
-                    stm.setString(4, theCity);
-                    stm.setString(5, theState);
-                    stm.setString(6, theCountryId);
+                    stm.setInt(1, theRegionId);
+                    stm.setString(2, theRegionName);
                                        
                     int rs1 = stm.executeUpdate();
                     mainObj = new JSONObject();
@@ -116,107 +173,30 @@ public class Locations {
                 }
                 return mainObj.toString();
     }
-
-    // list
-    @GET()
-    @Path("/list")
-    @Produces(MediaType.APPLICATION_JSON)
-    public String getList() {
-        ResultSet rs = null;
-        JSONObject listObj = new JSONObject();
-        loc = new Locations();
-        
-                try {
-                    String sql;
-                    locationArr = new JSONArray();
-                    sql = "select * from locations";
-                    // to show that this statement has parameter
-                    stm = con.prepareStatement(sql);
-                    rs = stm.executeQuery();
-                    while(rs.next())
-                    {
-                         mainObj = new JSONObject();
-                         locationId = rs.getInt(1);
-                         streetAdd = rs.getString(2);
-                         postalCode = rs.getString(3);
-                         city = rs.getString(4);
-                         state = rs.getString(5);
-                         countryId = rs.getString(6);
-                         mainObj.accumulate("locationId", locationId);
-                         mainObj.accumulate("streetAdd", streetAdd);
-                         mainObj.accumulate("postalCode", postalCode);
-                         mainObj.accumulate("city", city);
-                         mainObj.accumulate("state", state);
-                         mainObj.accumulate("countryId", countryId);
-                         locationArr.add(mainObj);
-                    }
-                    listObj.accumulate("Status", "OK");
-                    listObj.accumulate("Timestamp", timeStamp());
-                    listObj.accumulate("locations", locationArr);
-                } catch (SQLException ex) {
-                    listObj.accumulate("Status", "FAIL");
-                    listObj.accumulate("Timestamp", timeStamp());
-                    listObj.accumulate("message", "Error");
-                    Logger.getLogger(Locations.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                finally{
-                        mainObj.clear();
-                        if (rs != null) {
-                            try {
-                                  rs.close();
-                                } catch (SQLException e) {
-                            /* ignored */
-                                }
-                            }
-                        if (stm != null) {
-                            try {
-                                    stm.close();
-                                } catch (SQLException e) {
-                            /* ignored */
-                                }
-                            }
-                        if (con != null) {
-                            try {
-                                    con.close();
-                                } catch (SQLException e) {
-                            /* ignored */
-                                }
-                            }
-                }
-        return listObj.toString();
-    }
     
     // single list
     @GET()
-    @Path("/singleList&{locationId}")
+    @Path("/singleList&{regionId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSingleList(@PathParam("locationId") int theLocationid) {
+    public String getSingleList(@PathParam("regionId") int theRegionId) {
         ResultSet rs = null;
         JSONObject singleListObj = new JSONObject();
-        loc = new Locations();
+        reg = new Region();
         
                 try {
                     String sql;
-                    sql = "select * from locations where location_id=?";
+                    sql = "select * from regions where region_id=?";
                     // to show that this statement has parameter
                     stm = con.prepareStatement(sql);
-                    stm.setInt(1, theLocationid);
+                    stm.setInt(1, theRegionId);
                     rs = stm.executeQuery();
                     while(rs.next())
                     {
                          mainObj = new JSONObject();
-                         locationId = rs.getInt(1);
-                         streetAdd = rs.getString(2);
-                         postalCode = rs.getString(3);
-                         city = rs.getString(4);
-                         state = rs.getString(5);
-                         countryId = rs.getString(6);
-                         mainObj.accumulate("locationId", locationId);
-                         mainObj.accumulate("streetAdd", streetAdd);
-                         mainObj.accumulate("postalCode", postalCode);
-                         mainObj.accumulate("city", city);
-                         mainObj.accumulate("state", state);
-                         mainObj.accumulate("countryId", countryId);
+                         regionId = rs.getInt(1);
+                         regionName = rs.getString(2);
+                         mainObj.accumulate("regionId", regionId);
+                         mainObj.accumulate("regionName", regionName);
                     }
                     singleListObj.accumulate("Status", "OK");
                     singleListObj.accumulate("Timestamp", timeStamp());
@@ -256,19 +236,19 @@ public class Locations {
     
     // update
     @GET()
-    @Path("/updateLoc&{locationId}&{city}")
+    @Path("/updateReg&{regionId}&{regionName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getUpdate(@PathParam("locationId") int theLocationid,
-                            @PathParam("city") String theCity) {
-        loc = new Locations();
+    public String getUpdate(@PathParam("regionId") int theRegionid,
+                            @PathParam("regionName") String theRegionName) {
+        reg = new Region();
         
                 try {
                     String sql;
-                    sql = "update locations set city=? where location_id=?";
+                    sql = "update regions set region_name=? where region_id=?";
                     // to show that this statement has parameter
                     stm = con.prepareStatement(sql);
-                    stm.setString(1, theCity);
-                    stm.setInt(2, theLocationid);
+                    stm.setString(1, theRegionName);
+                    stm.setInt(2, theRegionid);
                     int rs = stm.executeUpdate();
                     mainObj = new JSONObject();
                     if(rs==1)
@@ -311,17 +291,17 @@ public class Locations {
     
     // delete
     @GET()
-    @Path("/deleteLoc&{locationId}")
+    @Path("/deleteReg&{regionId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getDelete(@PathParam("locationId") int theLocationid) {
-        loc = new Locations();
+    public String getDelete(@PathParam("regionId") int theRegionid) {
+        reg = new Region();
         
                 try {
                     String sql;
-                    sql = "delete from locations where location_id=?";
+                    sql = "delete from regions where region_id=?";
                     // to show that this statement has parameter
                     stm = con.prepareStatement(sql);
-                    stm.setInt(1, theLocationid);
+                    stm.setInt(1, theRegionid);
                     int rs = stm.executeUpdate();
                     mainObj = new JSONObject();
                     if(rs==1)
@@ -362,7 +342,7 @@ public class Locations {
         return mainObj.toString();
     }
     
-    public String timeStamp()
+public String timeStamp()
     {
         Timestamp ts = new Timestamp(System.currentTimeMillis());
         String tm = "" + ts.getTime();

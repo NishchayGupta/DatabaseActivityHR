@@ -29,9 +29,8 @@ public class ApplicationConfig extends Application {
      * If required, comment out calling this method in getClasses().
      */
     private void addRestResourceClasses(Set<Class<?>> resources) {
-        resources.add(cegepgim.Departments.class);
-        resources.add(cegepgim.Employees.class);
         resources.add(cegepgim.Locations.class);
+        resources.add(cegepgim.Region.class);
     }
     
 }
