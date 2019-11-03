@@ -56,7 +56,7 @@ public class Locations {
     
     // insert
     @GET()
-    @Path("insert&{locationId}&{streetAddr}&{postalCode}&{city}&{state}&{countryId}")
+    @Path("insertLoc&{locationId}&{streetAddr}&{postalCode}&{city}&{state}&{countryId}")
     @Produces(MediaType.APPLICATION_JSON)
     public String insertLocation(@PathParam("locationId") int theLocatonId,
                                  @PathParam("streetAddr") String theStreetAddr,
@@ -119,7 +119,7 @@ public class Locations {
 
     // list
     @GET()
-    @Path("/list")
+    @Path("/listLoc")
     @Produces(MediaType.APPLICATION_JSON)
     public String getList() {
         ResultSet rs = null;
@@ -188,7 +188,7 @@ public class Locations {
     
     // single list
     @GET()
-    @Path("/singleList&{locationId}")
+    @Path("/singleListLoc&{locationId}")
     @Produces(MediaType.APPLICATION_JSON)
     public String getSingleList(@PathParam("locationId") int theLocationid) {
         ResultSet rs = null;
